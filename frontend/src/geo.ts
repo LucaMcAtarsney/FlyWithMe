@@ -27,8 +27,8 @@ for (const polygon of polygons) {
   }
 }
 
-const WATER = '#cdd8e1'
-const LAND = '#f8f8f6'
+const WATER = '#c8dbec'
+const LAND = '#fafafa'
 
 // Turn a ring's [lon, lat] points into continuous longitudes (no jumps at the
 // 180° line), then shift the whole ring so it sits around -180..180.
@@ -100,3 +100,10 @@ function makeLandTexture(): CanvasTexture {
 }
 
 export const landTexture = makeLandTexture()
+
+export const coastlineSegments: Vector3[] = []
+for (const ring of coastlineRings) {
+  for (let i = 0; i < ring.length - 1; i++) {
+    coastlineSegments.push(ring[i], ring[i + 1])
+  }
+}
