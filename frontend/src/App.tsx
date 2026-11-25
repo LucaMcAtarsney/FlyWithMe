@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { Stars, OrbitControls } from '@react-three/drei'
 import './geo'
 import { CameraLight } from './CameraLight'
 import { Globe } from './globe'
 import { Plane, FlightPath, FocusGroup } from './plane'
+import { countryAt } from './countries'
 import './App.css'
 import type { Flight } from './types'
 
@@ -53,6 +54,14 @@ function App() {
   const [flight, setFlight] = useState<Flight | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [live, setLive] = useState<Flight[]>([])
+
+  const country = useMemo(
+    () =>
+      flight && flight.lat !== null && flight.lon !== null
+        ? countryAt(flight.lat, flight.lon)
+        : null,
+    [flight],
+  )
 
   async function loadLive() {
     try {
@@ -157,6 +166,7 @@ function App() {
               <Row label="speed" value={fmtSpeed(flight.velocity_ms)} />
               <Row label="heading" value={fmtHeading(flight.heading)} />
               <Row label="position" value={fmtPosition(flight.lat, flight.lon)} />
+              <Row label="over" value={country ?? 'open water'} />
               <Row label="status" value={flight.on_ground ? 'on ground' : 'airborne'} />
               <Row label="updated" value={fmtLastContact(flight.last_contact)} />
             </dl>
