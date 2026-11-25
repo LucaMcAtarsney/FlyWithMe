@@ -3,7 +3,8 @@ import { feature } from 'topojson-client'
 import { Vector3, CanvasTexture, SRGBColorSpace } from 'three'
 
 export const landGeo = feature(land as any, (land as any).objects.land)
-const polygons = (landGeo as any).features[0].geometry.coordinates
+// MultiPolygon coordinates: polygon[] → ring[] → position[] → [lon, lat]
+const polygons: number[][][][] = (landGeo as any).features[0].geometry.coordinates
 
 export function latLonToVec(lat: number, lon: number, radius = 1): Vector3 {
   const la = lat * (Math.PI / 180)
@@ -13,6 +14,41 @@ export function latLonToVec(lat: number, lon: number, radius = 1): Vector3 {
     radius * Math.sin(la),
     -radius * Math.cos(la) * Math.sin(lo),
   )
+}
+
+// Sample points along the great circle that passes through (lat, lon) on the
+// given compass bearing: half the span trails behind the aircraft, half projects
+// ahead. Used to draw a flight path when we only know current position + heading.
+export function greatCirclePoints(
+  lat: number,
+  lon: number,
+  bearingDeg: number,
+  spanDeg = 40,
+  steps = 64,
+  radius = 1.01,
+): Vector3[] {
+  const toRad = Math.PI / 180
+  const phi1 = lat * toRad
+  const lambda1 = lon * toRad
+  const theta = bearingDeg * toRad
+  const span = spanDeg * toRad
+
+  const points: Vector3[] = []
+  for (let i = 0; i <= steps; i++) {
+    // angular distance along the arc, from -span/2 (behind) to +span/2 (ahead)
+    const delta = -span / 2 + (span * i) / steps
+    const phi2 = Math.asin(
+      Math.sin(phi1) * Math.cos(delta) + Math.cos(phi1) * Math.sin(delta) * Math.cos(theta),
+    )
+    const lambda2 =
+      lambda1 +
+      Math.atan2(
+        Math.sin(theta) * Math.sin(delta) * Math.cos(phi1),
+        Math.cos(delta) - Math.sin(phi1) * Math.sin(phi2),
+      )
+    points.push(latLonToVec(phi2 / toRad, lambda2 / toRad, radius))
+  }
+  return points
 }
 
 export const coastlineRings: Vector3[][] = []
