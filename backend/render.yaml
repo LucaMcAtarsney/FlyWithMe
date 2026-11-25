@@ -1,0 +1,20 @@
+# Render blueprint for the Fly With Me API.
+# The airlines SQLite DB is gitignored, so it's regenerated from the committed
+# data/airlines.dat during the build step.
+services:
+  - type: web
+    name: flywithme-api
+    runtime: python
+    rootDir: backend
+    plan: free
+    buildCommand: pip install -r requirements.txt && python -m scripts.seed_airlines
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.7"
+      - key: CLIENT_ID
+        sync: false
+      - key: CLIENT_SECRET
+        sync: false
+      - key: ALLOWED_ORIGINS
+        value: https://flywithme.pentgon.com

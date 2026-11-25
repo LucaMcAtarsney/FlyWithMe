@@ -3,7 +3,7 @@ import sqlite3
 import pytest
 
 from app.db import SCHEMA_PATH
-from app.resolve import get_callsigns, iata_to_icaos, split_flight_number
+from app.resolve import get_callsigns, iata_to_icaos, icao_to_iata, split_flight_number
 
 @pytest.mark.parametrize(
     "flight_number, expected",
@@ -59,6 +59,15 @@ def test_iata_to_icaos_multiple(conn):
 
 def test_iata_to_icaos_unknown(conn):
     assert iata_to_icaos("ZZ", conn) == []
+
+
+def test_icao_to_iata_found(conn):
+    assert icao_to_iata("BAW", conn) == "BA"
+    assert icao_to_iata("EZY", conn) == "U2"
+
+
+def test_icao_to_iata_unknown(conn):
+    assert icao_to_iata("ZZZ", conn) is None
 
 
 @pytest.mark.parametrize(
