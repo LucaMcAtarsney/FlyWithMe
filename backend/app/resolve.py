@@ -23,6 +23,13 @@ def iata_to_icaos(iata: str, conn: sqlite3.Connection) -> list[str]:
 
     return [row["icao"] for row in rows]
 
+# reverse lookup: icao airline code -> iata (for turning a live callsign back into
+# a flight number). Returns the first match, or None if the icao is unknown.
+def icao_to_iata(icao: str, conn: sqlite3.Connection) -> str | None:
+    row = conn.execute("SELECT iata FROM airlines WHERE icao = ?", (icao,)).fetchone()
+
+    return row["iata"] if row else None
+
 # glue together icao + flight number to get callsign
 def get_callsigns(flight_number: str, conn: sqlite3.Connection) -> list[str]:
     parts = split_flight_number(flight_number)
