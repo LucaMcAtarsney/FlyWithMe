@@ -5,7 +5,11 @@ from app.config import CLIENT_ID, CLIENT_SECRET, ALLOWED_ORIGINS
 from app.opensky import TokenManager
 from app.db import get_connection
 from app.flight import Flight, find_flight, list_live_flights
+import httpx
 import sqlite3
+
+# OpenSky being slow/unreachable shouldn't surface as a raw 500.
+OPENSKY_UNAVAILABLE = "Live flight data is temporarily unavailable, please try again."
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -48,7 +52,10 @@ def flights_live(
     conn: sqlite3.Connection = Depends(get_db),
     tokens: TokenManager = Depends(get_tokens),
 ) -> list[Flight]:
-    return list_live_flights(conn, tokens, limit=limit)
+    try:
+        return list_live_flights(conn, tokens, limit=limit)
+    except httpx.HTTPError:
+        raise HTTPException(status_code=503, detail=OPENSKY_UNAVAILABLE)
 
 @app.get("/api/flight/{flight_number}")
 def get_flight(
@@ -56,7 +63,10 @@ def get_flight(
     conn: sqlite3.Connection = Depends(get_db),
     tokens: TokenManager = Depends(get_tokens),
 ) -> Flight:
-    flight = find_flight(flight_number, conn, tokens)
+    try:
+        flight = find_flight(flight_number, conn, tokens)
+    except httpx.HTTPError:
+        raise HTTPException(status_code=503, detail=OPENSKY_UNAVAILABLE)
     if flight is None:
         raise HTTPException(status_code=404, detail=f"Flight {flight_number} not found")
     return flight

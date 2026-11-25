@@ -7,6 +7,9 @@ services:
     runtime: python
     rootDir: backend
     plan: free
+    # Frankfurt egress reaches OpenSky's Swiss network; the default US region
+    # times out connecting to it.
+    region: frankfurt
     buildCommand: pip install -r requirements.txt && python -m scripts.seed_airlines
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
