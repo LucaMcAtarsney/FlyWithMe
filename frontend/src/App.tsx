@@ -145,6 +145,14 @@ function App() {
             {PLANE}
           </pre>
           <h1 className="text-sm text-white/70">flywithme</h1>
+          <a
+            href="https://opensky-network.org"
+            target="_blank"
+            rel="noreferrer noopener"
+            className="text-[10px] tracking-wide text-white/30 transition-colors hover:text-white/60"
+          >
+            powered by opensky
+          </a>
         </header>
 
         {/* tracked flight data — styled after the search bar */}
