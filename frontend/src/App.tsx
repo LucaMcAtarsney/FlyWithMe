@@ -145,6 +145,14 @@ function App() {
             {PLANE}
           </pre>
           <h1 className="text-sm text-white/70">flywithme</h1>
+          <a
+            href="https://opensky-network.org"
+            target="_blank"
+            rel="noreferrer noopener"
+            className="text-[10px] tracking-wide text-white/30 transition-colors hover:text-white/60"
+          >
+            powered by opensky
+          </a>
         </header>
 
         {/* tracked flight data — styled after the search bar */}
@@ -161,6 +169,7 @@ function App() {
               </button>
             </div>
             <dl className="flex flex-col gap-1">
+              <Row label="airline" value={flight.airline ?? '—'} />
               <Row label="callsign" value={flight.callsign} />
               <Row label="altitude" value={fmtAltitude(flight.altitude_m)} />
               <Row label="speed" value={fmtSpeed(flight.velocity_ms)} />
@@ -191,12 +200,15 @@ function App() {
               <li key={f.callsign}>
                 <button
                   onClick={() => track(f)}
-                  className={`flex w-full items-center justify-between gap-3 rounded-sm px-2 py-1 text-left transition-colors hover:bg-white/[0.06] ${
+                  className={`flex w-full flex-col rounded-sm px-2 py-1 text-left transition-colors hover:bg-white/[0.06] ${
                     flight?.callsign === f.callsign ? 'bg-white/[0.06] text-white' : 'text-white/80'
                   }`}
                 >
-                  <span>{f.flight_number}</span>
-                  <span className="text-white/35">{f.callsign}</span>
+                  <span className="flex items-center justify-between gap-3">
+                    <span>{f.flight_number}</span>
+                    <span className="text-white/30">{f.callsign}</span>
+                  </span>
+                  {f.airline && <span className="truncate text-white/40">{f.airline}</span>}
                 </button>
               </li>
             ))}
