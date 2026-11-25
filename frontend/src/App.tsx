@@ -137,10 +137,10 @@ function App() {
       </Canvas>
 
       <div className="animate-fade-in pointer-events-none absolute inset-0 z-10">
-        <header className="pointer-events-auto absolute top-6 left-6 flex flex-col items-center gap-1.5">
+        <header className="pointer-events-auto absolute top-4 left-4 flex flex-col items-center gap-1.5 sm:top-6 sm:left-6">
           <pre
             aria-hidden="true"
-            className="text-[15px] leading-tight text-white/70 select-none"
+            className="text-[11px] leading-tight text-white/70 select-none sm:text-[15px]"
           >
             {PLANE}
           </pre>
@@ -157,7 +157,7 @@ function App() {
 
         {/* tracked flight data — styled after the search bar */}
         {flight && (
-          <div className="animate-fade-in pointer-events-auto absolute top-32 left-6 w-64 rounded-sm border border-white/15 bg-white/[0.03] px-4 py-3 text-xs backdrop-blur-sm">
+          <div className="animate-fade-in pointer-events-auto absolute top-28 left-4 w-56 rounded-sm border border-white/15 bg-white/[0.03] px-4 py-3 text-xs backdrop-blur-sm sm:top-32 sm:left-6 sm:w-64">
             <div className="mb-2 flex items-center justify-between">
               <span className="text-sm text-white">{flight.flight_number}</span>
               <button
@@ -183,7 +183,11 @@ function App() {
         )}
 
         {/* live, clickable list so anyone can test tracking right away */}
-        <div className="animate-fade-in pointer-events-auto absolute top-6 right-6 w-60 rounded-sm border border-white/15 bg-white/[0.03] px-4 py-3 text-xs backdrop-blur-sm">
+        <div
+          className={`animate-fade-in pointer-events-auto absolute top-4 right-4 w-44 rounded-sm border border-white/15 bg-white/[0.03] px-4 py-3 text-xs backdrop-blur-sm sm:top-6 sm:right-6 sm:w-60 ${
+            flight ? 'hidden sm:block' : ''
+          }`}
+        >
           <div className="mb-2 flex items-center justify-between">
             <span className="text-white/50 lowercase">flights in the air</span>
             <button
@@ -194,7 +198,7 @@ function App() {
               ↻
             </button>
           </div>
-          <ul className="flex flex-col gap-0.5">
+          <ul className="flex max-h-[45vh] flex-col gap-0.5 overflow-y-auto">
             {live.length === 0 && <li className="px-2 py-1 text-white/30">loading…</li>}
             {live.map((f) => (
               <li key={f.callsign}>
@@ -216,7 +220,7 @@ function App() {
         </div>
 
         <div
-          className={`pointer-events-auto absolute bottom-10 left-1/2 flex w-[90%] max-w-lg -translate-x-1/2 flex-col items-center gap-5 transition-transform duration-500 ease-out ${
+          className={`pointer-events-auto absolute bottom-[max(2rem,env(safe-area-inset-bottom))] left-1/2 flex w-[90%] max-w-lg -translate-x-1/2 flex-col items-center gap-5 transition-transform duration-500 ease-out sm:bottom-10 ${
             raised ? '-translate-y-2' : 'translate-y-0'
           }`}
         >
@@ -236,7 +240,7 @@ function App() {
               ❯
             </span>
             <input
-              className="min-w-0 flex-1 bg-transparent text-sm text-white caret-white outline-none placeholder:text-white/30"
+              className="min-w-0 flex-1 bg-transparent text-base text-white caret-white outline-none placeholder:text-white/30 sm:text-sm"
               placeholder="enter a flight number"
               value={query}
               onChange={(e) => setQuery(e.target.value.toUpperCase())}
