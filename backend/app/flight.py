@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 import app.opensky as Opensky
-from app.resolve import get_callsigns, icao_to_iata
+from app.resolve import get_callsigns, icao_to_iata, icao_to_name
 import random
 import re
 import sqlite3
@@ -12,6 +12,7 @@ _CALLSIGN_RE = re.compile(r"^([A-Z]{3})(\d{1,4})$")
 @dataclass
 class Flight:
     flight_number: str          # what the user typed, e.g. "BA123"
+    airline: str | None         # airline name, e.g. "British Airways"
     callsign: str               # matched ICAO callsign, e.g. "BAW123"
     icao24: str                 # aircraft transponder address, e.g. "4ca7b5"
     lat: float | None           # degrees
@@ -22,9 +23,10 @@ class Flight:
     on_ground: bool
     last_contact: int           # unix timestamp of last message
 
-def _state_to_flight(state: list, flight_number: str) -> Flight:
+def _state_to_flight(state: list, flight_number: str, airline: str | None = None) -> Flight:
     return Flight(
         flight_number=flight_number,
+        airline=airline,
         callsign=state[1].strip(),
         icao24=state[0],
         lat=state[6],
@@ -46,7 +48,8 @@ def find_flight(flight_number: str, conn:sqlite3.Connection , tokens: Opensky.To
 
     for callsign in callsigns:
         if callsign in by_callsign:
-            return _state_to_flight(by_callsign[callsign], flight_number)
+            airline = icao_to_name(callsign[:3], conn)
+            return _state_to_flight(by_callsign[callsign], flight_number, airline)
 
     return None
 
@@ -88,7 +91,7 @@ def list_live_flights(conn: sqlite3.Connection, tokens: Opensky.TokenManager, li
 
         seen_numbers.add(flight_number)
         seen_airlines.add(icao_prefix)
-        flights.append(_state_to_flight(state, flight_number))
+        flights.append(_state_to_flight(state, flight_number, icao_to_name(icao_prefix, conn)))
 
         if len(flights) >= limit:
             break

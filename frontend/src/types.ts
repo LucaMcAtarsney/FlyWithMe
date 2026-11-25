@@ -1,5 +1,6 @@
 export type Flight = {
     flight_number: string
+    airline: string | null
     callsign: string
     icao24: string
     lat: number | null

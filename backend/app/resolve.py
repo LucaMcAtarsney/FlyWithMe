@@ -30,6 +30,12 @@ def icao_to_iata(icao: str, conn: sqlite3.Connection) -> str | None:
 
     return row["iata"] if row else None
 
+# human-readable airline name for an icao code, e.g. "BAW" -> "British Airways"
+def icao_to_name(icao: str, conn: sqlite3.Connection) -> str | None:
+    row = conn.execute("SELECT name FROM airlines WHERE icao = ?", (icao,)).fetchone()
+
+    return row["name"] if row else None
+
 # glue together icao + flight number to get callsign
 def get_callsigns(flight_number: str, conn: sqlite3.Connection) -> list[str]:
     parts = split_flight_number(flight_number)
