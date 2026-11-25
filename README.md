@@ -5,15 +5,13 @@ A stylised live flight tracker. Type a flight number (or pick one from the
 following its great-circle path, with live altitude, speed, heading, the country
 it's currently over, and the operating airline.
 
-![globe with a tracked flight](frontend/src/assets/hero.png)
-
 ## How it works
 
-- **Backend** — FastAPI service that turns a flight number like `BA123` into
+- **Backend**: FastAPI service that turns a flight number like `BA123` into
   airline ICAO callsigns (via a seeded SQLite `airlines` table from OpenFlights
   data), then looks the aircraft up in [OpenSky Network](https://opensky-network.org)'s
   live `/states/all` feed and returns its current position/heading/speed.
-- **Frontend** — React + [react-three-fiber](https://github.com/pmndrs/react-three-fiber)
+- **Frontend**: React + [react-three-fiber](https://github.com/pmndrs/react-three-fiber)
   globe. Coastlines and a land texture are drawn from `world-atlas` TopoJSON; a
   Boeing 787 glTF model is placed at the flight's position and oriented to its
   heading, with the flight path drawn as a great circle and the overflown country
@@ -77,7 +75,7 @@ Open http://localhost:5173.
 ## Data & attribution
 
 - Airline and airport data from [OpenFlights](https://openflights.org/data.html),
-  published under the Open Database License (ODbL) — attribution required.
+  published under the Open Database License (ODbL); attribution required.
 - Live aircraft states from the [OpenSky Network](https://opensky-network.org).
 - Coastline/country boundaries from [`world-atlas`](https://github.com/topojson/world-atlas)
   (Natural Earth, public domain).
