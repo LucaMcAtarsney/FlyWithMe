@@ -1,11 +1,44 @@
-import { useMemo, useRef, type ReactNode } from 'react'
+import { Suspense, useMemo, useRef, type ReactNode } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { Line } from '@react-three/drei'
-import { Group, Matrix4, Quaternion, Vector3 } from 'three'
+import { Line, useGLTF } from '@react-three/drei'
+import { Box3, Color, Group, Matrix4, Object3D, Quaternion, Vector3 } from 'three'
 import { greatCirclePoints, latLonToVec } from './geo'
 import type { Flight } from './types'
 
 const IDENTITY = new Quaternion()
+
+// Boeing 787 model. Its nose already points +Z and up is +Y, matching the pose
+// group below, so it needs centering + scaling only — no rotation offset.
+const MODEL_URL = new URL('./assets/airplane.glb', import.meta.url).href
+const MODEL_LENGTH = 0.18 // target size in globe units
+useGLTF.preload(MODEL_URL)
+
+function PlaneModel() {
+  const { scene } = useGLTF(MODEL_URL)
+  const model = useMemo(() => {
+    const obj = scene.clone(true)
+    const box = new Box3().setFromObject(obj)
+    const size = box.getSize(new Vector3())
+    const center = box.getCenter(new Vector3())
+    const scale = MODEL_LENGTH / Math.max(size.x, size.y, size.z)
+    // centre the model on its bbox, then scale to target size
+    obj.position.copy(center.multiplyScalar(-scale))
+    obj.scale.setScalar(scale)
+    // clone materials (clone() shares them) and add a faint glow so the plane
+    // still reads on the globe's dark side
+    obj.traverse((o: Object3D) => {
+      const mesh = o as unknown as { isMesh?: boolean; material?: any }
+      if (mesh.isMesh && mesh.material) {
+        mesh.material = mesh.material.clone()
+        mesh.material.emissive = new Color('#8fb4ff')
+        mesh.material.emissiveIntensity = 0.18
+      }
+    })
+    return obj
+  }, [scene])
+
+  return <primitive object={model} />
+}
 
 // How far above the globe surface the plane floats, scaled from barometric
 // altitude but kept subtle so it reads as "just above" the surface.
@@ -51,32 +84,10 @@ export function Plane({ flight }: { flight: Flight }) {
     <>
       <Line points={stem} color="#9fc2ff" lineWidth={1} transparent opacity={0.4} />
 
-      <group position={position} quaternion={quaternion} scale={0.9}>
-        {/* fuselage */}
-        <mesh>
-          <boxGeometry args={[0.016, 0.016, 0.14]} />
-          <meshStandardMaterial color="#ffffff" emissive="#8fb4ff" emissiveIntensity={0.5} roughness={0.4} />
-        </mesh>
-        {/* nose */}
-        <mesh position={[0, 0, 0.085]} rotation={[Math.PI / 2, 0, 0]}>
-          <coneGeometry args={[0.012, 0.04, 12]} />
-          <meshStandardMaterial color="#ffffff" emissive="#8fb4ff" emissiveIntensity={0.5} roughness={0.4} />
-        </mesh>
-        {/* main wings */}
-        <mesh position={[0, 0, 0.01]}>
-          <boxGeometry args={[0.16, 0.005, 0.032]} />
-          <meshStandardMaterial color="#eaf1ff" emissive="#8fb4ff" emissiveIntensity={0.35} roughness={0.5} />
-        </mesh>
-        {/* horizontal tailplane */}
-        <mesh position={[0, 0, -0.06]}>
-          <boxGeometry args={[0.07, 0.004, 0.02]} />
-          <meshStandardMaterial color="#eaf1ff" emissive="#8fb4ff" emissiveIntensity={0.35} roughness={0.5} />
-        </mesh>
-        {/* vertical fin */}
-        <mesh position={[0, 0.018, -0.06]}>
-          <boxGeometry args={[0.004, 0.03, 0.025]} />
-          <meshStandardMaterial color="#eaf1ff" emissive="#8fb4ff" emissiveIntensity={0.35} roughness={0.5} />
-        </mesh>
+      <group position={position} quaternion={quaternion}>
+        <Suspense fallback={null}>
+          <PlaneModel />
+        </Suspense>
       </group>
     </>
   )
