@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 import app.opensky as Opensky
 from app.resolve import get_callsigns, icao_to_iata
+import random
 import re
 import sqlite3
 
@@ -55,9 +56,11 @@ def list_live_flights(conn: sqlite3.Connection, tokens: Opensky.TokenManager, li
     Picks airborne aircraft whose callsign maps cleanly back to a flight number,
     so each item works with the same search flow. Prefers distinct airlines so the
     list looks varied, and returns full Flight objects so the frontend can track
-    them directly without a second lookup.
+    them directly without a second lookup. The order is shuffled so refreshing the
+    list cycles through different flights.
     """
-    states = Opensky.get_states(tokens.get())
+    states = list(Opensky.get_states(tokens.get()))
+    random.shuffle(states)
 
     flights: list[Flight] = []
     seen_numbers: set[str] = set()
