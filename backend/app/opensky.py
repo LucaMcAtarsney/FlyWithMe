@@ -38,7 +38,18 @@ class TokenManager:
         return self._token
 
 
+# /states/all returns ~11k rows and costs OpenSky credits, and both the live-list
+# and search paths call it. Cache the last response briefly so repeated calls in a
+# demo are fast and cheap.
+STATES_TTL = 15.0
+_states_cache: tuple[float, list[list]] | None = None
+
 def get_states(token: str) -> list[list]:
+    global _states_cache
+    now = time.monotonic()
+    if _states_cache is not None and now - _states_cache[0] < STATES_TTL:
+        return _states_cache[1]
+
     GET_STATES = ROOT_URL + "/states/all"
     r = httpx.get(
         GET_STATES,
@@ -46,4 +57,6 @@ def get_states(token: str) -> list[list]:
         timeout=10.0)
 
     r.raise_for_status()
-    return r.json()["states"] or []
+    states = r.json()["states"] or []
+    _states_cache = (now, states)
+    return states
