@@ -24,14 +24,19 @@ function PlaneModel() {
     // centre the model on its bbox, then scale to target size
     obj.position.copy(center.multiplyScalar(-scale))
     obj.scale.setScalar(scale)
-    // clone materials (clone() shares them) and add a faint glow so the plane
-    // still reads on the globe's dark side
+    // restyle to match the old primitive plane: flat white with a soft blue
+    // glow (drop the model's own textures/colours). clone() shares materials,
+    // so clone each before mutating.
     obj.traverse((o: Object3D) => {
       const mesh = o as unknown as { isMesh?: boolean; material?: any }
       if (mesh.isMesh && mesh.material) {
         mesh.material = mesh.material.clone()
+        mesh.material.color = new Color('#eaf1ff')
+        if ('map' in mesh.material) mesh.material.map = null
+        if ('metalness' in mesh.material) mesh.material.metalness = 0
+        if ('roughness' in mesh.material) mesh.material.roughness = 0.5
         mesh.material.emissive = new Color('#8fb4ff')
-        mesh.material.emissiveIntensity = 0.18
+        mesh.material.emissiveIntensity = 0.4
       }
     })
     return obj
