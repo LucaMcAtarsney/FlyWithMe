@@ -54,6 +54,7 @@ function App() {
   const [flight, setFlight] = useState<Flight | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [live, setLive] = useState<Flight[]>([])
+  const [collapsed, setCollapsed] = useState(false)
 
   const country = useMemo(
     () =>
@@ -88,6 +89,7 @@ function App() {
     }
     setError(null)
     setFlight(data)
+    setCollapsed(false)
   }
 
   // track a flight straight from the live list — no second lookup needed
@@ -96,6 +98,7 @@ function App() {
     setSearched(true)
     setQuery(f.flight_number)
     setFlight(f)
+    setCollapsed(false)
   }
 
   function clearFlight() {
@@ -155,68 +158,76 @@ function App() {
           </a>
         </header>
 
-        {/* tracked flight data — styled after the search bar */}
-        {flight && (
-          <div className="animate-fade-in pointer-events-auto absolute top-28 left-4 w-56 rounded-sm border border-white/15 bg-white/[0.03] px-4 py-3 text-xs backdrop-blur-sm sm:top-32 sm:left-6 sm:w-64">
-            <div className="mb-2 flex items-center justify-between">
-              <span className="text-sm text-white">{flight.flight_number}</span>
+        {/* one drawer: the flight list becomes the detail view when a flight
+            is tracked, and collapses to just its title bar */}
+        <div className="animate-fade-in pointer-events-auto absolute top-4 right-4 w-56 rounded-sm border border-white/15 bg-white/[0.03] px-4 py-3 text-xs backdrop-blur-sm sm:top-6 sm:right-6 sm:w-60">
+          <div className={`flex items-center justify-between gap-2 ${collapsed ? '' : 'mb-2'}`}>
+            {flight ? (
+              <span className="truncate text-sm text-white">{flight.flight_number}</span>
+            ) : (
+              <span className="text-white/50 lowercase">flights in the air</span>
+            )}
+            <div className="flex shrink-0 items-center gap-2 text-base">
+              {flight ? (
+                <button
+                  onClick={clearFlight}
+                  aria-label="Back to flight list"
+                  className="text-white/40 transition-colors hover:text-white/90"
+                >
+                  ✕
+                </button>
+              ) : (
+                <button
+                  onClick={loadLive}
+                  aria-label="Refresh list"
+                  className="text-white/40 transition-colors hover:text-white/90"
+                >
+                  ↻
+                </button>
+              )}
               <button
-                onClick={clearFlight}
-                aria-label="Stop tracking"
-                className="shrink-0 text-white/40 transition-colors hover:text-white/90"
+                onClick={() => setCollapsed((c) => !c)}
+                aria-label={collapsed ? 'Open panel' : 'Close panel'}
+                aria-expanded={!collapsed}
+                className="leading-none text-white/40 transition-colors hover:text-white/90"
               >
-                ✕
+                {collapsed ? '▾' : '▴'}
               </button>
             </div>
-            <dl className="flex flex-col gap-1">
-              <Row label="airline" value={flight.airline ?? '—'} />
-              <Row label="callsign" value={flight.callsign} />
-              <Row label="altitude" value={fmtAltitude(flight.altitude_m)} />
-              <Row label="speed" value={fmtSpeed(flight.velocity_ms)} />
-              <Row label="heading" value={fmtHeading(flight.heading)} />
-              <Row label="position" value={fmtPosition(flight.lat, flight.lon)} />
-              <Row label="over" value={country ?? 'open water'} />
-              <Row label="status" value={flight.on_ground ? 'on ground' : 'airborne'} />
-              <Row label="updated" value={fmtLastContact(flight.last_contact)} />
-            </dl>
           </div>
-        )}
 
-        {/* live, clickable list so anyone can test tracking right away */}
-        <div
-          className={`animate-fade-in pointer-events-auto absolute top-4 right-4 w-44 rounded-sm border border-white/15 bg-white/[0.03] px-4 py-3 text-xs backdrop-blur-sm sm:top-6 sm:right-6 sm:w-60 ${
-            flight ? 'hidden sm:block' : ''
-          }`}
-        >
-          <div className="mb-2 flex items-center justify-between">
-            <span className="text-white/50 lowercase">flights in the air</span>
-            <button
-              onClick={loadLive}
-              aria-label="Refresh list"
-              className="shrink-0 text-white/40 transition-colors hover:text-white/90"
-            >
-              ↻
-            </button>
-          </div>
-          <ul className="flex max-h-[45vh] flex-col gap-0.5 overflow-y-auto">
-            {live.length === 0 && <li className="px-2 py-1 text-white/30">loading…</li>}
-            {live.map((f) => (
-              <li key={f.callsign}>
-                <button
-                  onClick={() => track(f)}
-                  className={`flex w-full flex-col rounded-sm px-2 py-1 text-left transition-colors hover:bg-white/[0.06] ${
-                    flight?.callsign === f.callsign ? 'bg-white/[0.06] text-white' : 'text-white/80'
-                  }`}
-                >
-                  <span className="flex items-center justify-between gap-3">
-                    <span>{f.flight_number}</span>
-                    <span className="text-white/30">{f.callsign}</span>
-                  </span>
-                  {f.airline && <span className="truncate text-white/40">{f.airline}</span>}
-                </button>
-              </li>
+          {!collapsed &&
+            (flight ? (
+              <dl className="flex flex-col gap-1">
+                <Row label="airline" value={flight.airline ?? '—'} />
+                <Row label="callsign" value={flight.callsign} />
+                <Row label="altitude" value={fmtAltitude(flight.altitude_m)} />
+                <Row label="speed" value={fmtSpeed(flight.velocity_ms)} />
+                <Row label="heading" value={fmtHeading(flight.heading)} />
+                <Row label="position" value={fmtPosition(flight.lat, flight.lon)} />
+                <Row label="over" value={country ?? 'open water'} />
+                <Row label="status" value={flight.on_ground ? 'on ground' : 'airborne'} />
+                <Row label="updated" value={fmtLastContact(flight.last_contact)} />
+              </dl>
+            ) : (
+              <ul className="flex max-h-[45vh] flex-col gap-0.5 overflow-y-auto">
+                {live.length === 0 && <li className="px-2 py-1 text-white/30">loading…</li>}
+                {live.map((f) => (
+                  <li key={f.callsign}>
+                    <button
+                      onClick={() => track(f)}
+                      className="flex w-full flex-col rounded-sm px-2 py-1 text-left text-white/80 transition-colors hover:bg-white/[0.06]"
+                    >
+                      <span className="flex items-center justify-between gap-3">
+                        <span>{f.flight_number}</span>
+                        <span className="text-white/30">{f.callsign}</span>
+                      </span>
+                      {f.airline && <span className="truncate text-white/40">{f.airline}</span>}
+                    </button>
+                  </li>
+                ))}
+              </ul>
             ))}
-          </ul>
         </div>
 
         <div
